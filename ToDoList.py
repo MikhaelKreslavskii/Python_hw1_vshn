@@ -4,15 +4,22 @@
 class ToDoList:
     def __init__(self) -> None:
         self.tasks = []
+        self.status = {
+            0: "Не начата",
+            1: "В процессе",
+            2: "Завершена"
+        }
 
     ###Добавление задачи
-    def add_task(self, description, task_id=1, status="Не начата"):
+    def add_task(self, description, task_id=1, status=0):
         exist_ids = [x["id"] for x in self.tasks]
-        if len(exist_ids)==0:
-            task_id = 1
-        else:
+        
+        if task_id in exist_ids:
+
             task_id = max(exist_ids) +1 
-            
+            print(f"New task id: {task_id}")
+        
+         
 
         task = {
             "id": task_id,
@@ -26,7 +33,8 @@ class ToDoList:
     ##Просмотр списка задач
     def view_tasks(self):
         for task in self.tasks:
-            print(f"Задача с id: {task['id']}\n{task['description']}\n{task['status']}\n")
+            
+            print(f"Задача с id: {task['id']}\n{task['description']}\n{self.status[task['status']]}\n")
         
 
     ###Удаление задачи из списка
@@ -46,7 +54,7 @@ class ToDoList:
         exist_ids = [x["id"] for x in self.tasks]
         if task_id not in exist_ids:
             print("Данной задачи не существует")
-        elif status not in ["Не начата", "В процессе", "Завершена"]:
+        elif status not in self.status.keys():
             print("Такого статуса не существует")
         else:
 
@@ -60,17 +68,21 @@ class ToDoList:
     def get_tasks_from_file(self, file_path):
         try:
             with open(file=file_path, mode="r", encoding="utf-8") as f:
-                task_line = f.readline()
-                if len(task_line)==3: ### Длина строки 3 и последнее слово "Завершена"
-                    self.add_task(task_id=int(task_line[0]), description=task_line[1], status=task_line[2])
-                else:
-                    if task_line[-1]=="Завершена":
-                        status="Завершена"
-                        description = [task_line[i]+" " for i in range(1,len(task_line)-1)]
+                task_lines = f.readlines()
+               
+                for task_line in task_lines:
+                    task_line = task_line.strip().split(sep=';')
+                    
+                    
+                    if len(task_line)==3: 
+                        
+                        status_id = int(task_line[2].strip())
+                        
+                        
+                        
+                        self.add_task(task_id=int(task_line[0]), description=task_line[1], status=status_id)
                     else:
-                        status = task_line[-2]+ " "+ task_line[-1]
-                        description = [task_line[i]+" " for i in range(1,len(task_line)-2)]
-                    self.add_task(task_id=int(task_line[0]), description=description, status=status)
+                        print("Количество данных не равно 3")
 
 
         except Exception as e:
@@ -80,9 +92,9 @@ class ToDoList:
     def load_tasks_to_file(self, file_path):
         
         try:
-            with open(file=file_path,mode='a',encoding="utf-8") as f:
+            with open(file=file_path,mode='w',encoding="utf-8") as f:
                 for task in self.tasks:
-                    f.write(f"{task['id']} {task['description']} {task['status']}\n")
+                    f.write(f"{task['id']};{task['description']};{task['status']}\n")
                     print("Запись")
         except Exception as e:
             print(e)
